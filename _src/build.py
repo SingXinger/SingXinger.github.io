@@ -175,6 +175,8 @@ def build(idx):
         for row in sorted(T, key=lambda r: -len(r[0])):
             out = out.replace(row[0], row[col])
         out = out.replace('>운기조식<span', '>' + BRAND[code] + '<span')
+        # language-specific copies of the game/poster images (text baked in)
+        out = re.sub(r'/img/([0-9a-f]{8})\.webp', lambda m: '/img/%s/%s.webp' % ({'en': 'en', 'ja': 'ja', 'zh': 'zh'}[code], m.group(1)), out)
         # drop the Toss card (Korean-only)
         out, n = re.subn(r'<a class="play-link" href="intoss://ungijosik">.*?</a>(?=</div>)', "", out, flags=re.S)
         assert n == 1, "toss card not found"
