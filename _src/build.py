@@ -2,10 +2,10 @@
 """Generate the multilingual promo pages from _src/template.ko.html.
 
 Run from the repo root:  python3 _src/build.py
-Outputs: index.html (ko), en/index.html, ja/index.html, zh-tw/index.html
+Outputs: index.html (ko), en/index.html, ja/index.html, zh-tw/index.html, zh-cn/index.html
 The Toss (intoss://) button and Toss mentions exist only in the Korean page.
 """
-import os, re
+import json, os, re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = "https://singxinger.github.io"
@@ -16,7 +16,11 @@ LANGS = [  # code, dir, html lang, og locale, switcher label
     ("en", "en/", "en", "en_US", "English"),
     ("ja", "ja/", "ja", "ja_JP", "日本語"),
     ("zh", "zh-tw/", "zh-Hant-TW", "zh_TW", "繁體中文"),
+    ("zs", "zh-cn/", "zh-Hans-CN", "zh_CN", "简体中文"),
 ]
+# Simplified Chinese copy: converted from the zh column (OpenCC tw2sp) and reviewed; ko text -> zh-Hans text
+ZHS = json.load(open(os.path.join(ROOT, "_src/zhs.json"), encoding="utf-8"))
+IMGDIR = {"en": "en", "ja": "ja", "zh": "zh", "zs": "zhcn"}
 
 # (ko, en, ja, zh) -- ko must occur verbatim in the template.
 T = [
@@ -143,18 +147,20 @@ T = [
  ("맨 위로 ↑", "Back to top ↑", "ページ上部へ ↑", "回到頂端 ↑"),
 ]
 
-BRAND = {"en": "Ungijosik", "ja": "運気調息", "zh": "運氣調息"}
+BRAND = {"en": "Ungijosik", "ja": "運気調息", "zh": "運氣調息", "zs": "运气调息"}
 FONTS = {
  "ko": None,
  "en": "https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Serif:wght@500;600;700&display=swap",
  "ja": "https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;600;700&display=swap",
  "zh": "https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;600;700&display=swap",
+ "zs": "https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;600;700&display=swap",
 }
-FAMS = {"en": ("Noto Sans", "Noto Serif"), "ja": ("Noto Sans JP", "Noto Serif JP"), "zh": ("Noto Sans TC", "Noto Serif TC")}
+FAMS = {"en": ("Noto Sans", "Noto Serif"), "ja": ("Noto Sans JP", "Noto Serif JP"), "zh": ("Noto Sans TC", "Noto Serif TC"), "zs": ("Noto Sans SC", "Noto Serif SC")}
 EXTRA_CSS = {
  "en": ".hero h1{font-size:clamp(32px,3.9vw,56px);letter-spacing:-1px;line-height:1.25}h2{letter-spacing:-.5px}.eyebrow{letter-spacing:2px}@media(max-width:760px){.hero h1{font-size:34px;letter-spacing:-.5px}}",
  "ja": ".hero h1{letter-spacing:-1px;line-height:1.4}h2{letter-spacing:0}@media(max-width:760px){.hero h1{font-size:36px;letter-spacing:-.5px}}",
  "zh": ".hero h1{letter-spacing:0;line-height:1.4}h2{letter-spacing:0}@media(max-width:760px){.hero h1{font-size:38px;letter-spacing:0}}",
+ "zs": ".hero h1{letter-spacing:0;line-height:1.4}h2{letter-spacing:0}@media(max-width:760px){.hero h1{font-size:38px;letter-spacing:0}}",
 }
 SWITCH_CSS = (".lang{display:flex;gap:14px;font-size:11px;color:var(--muted);white-space:nowrap}"
               ".lang a{padding:4px 0;border-bottom:1px solid transparent}.lang a[aria-current]{color:var(--mint);border-color:#536f5e}"
@@ -170,13 +176,13 @@ def build(idx):
     code, d, htmllang, og, _ = LANGS[idx]
     out = tpl
     if code != "ko":
-        col = {"en": 1, "ja": 2, "zh": 3}[code]
+        col = {"en": 1, "ja": 2, "zh": 3}.get(code)
         # longest ko strings first so substrings never pre-empt longer ones
         for row in sorted(T, key=lambda r: -len(r[0])):
-            out = out.replace(row[0], row[col])
+            out = out.replace(row[0], ZHS[row[0]] if code == "zs" else row[col])
         out = out.replace('>운기조식<span', '>' + BRAND[code] + '<span')
         # language-specific copies of the game/poster images (text baked in)
-        out = re.sub(r'/img/([0-9a-f]{8})\.webp', lambda m: '/img/%s/%s.webp' % ({'en': 'en', 'ja': 'ja', 'zh': 'zh'}[code], m.group(1)), out)
+        out = re.sub(r'/img/([0-9a-f]{8})\.webp', lambda m: '/img/%s/%s.webp' % (IMGDIR[code], m.group(1)), out)
         # drop the Toss card (Korean-only)
         out, n = re.subn(r'<a class="play-link" href="intoss://ungijosik">.*?</a>(?=</div>)', "", out, flags=re.S)
         assert n == 1, "toss card not found"
