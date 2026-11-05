@@ -210,7 +210,9 @@ def build(idx):
     links += '<link rel="canonical" href="%s%s">' % (SITE, here)
     links += ('<meta property="og:type" content="website"><meta property="og:title" content="%s">'
               '<meta property="og:description" content="%s"><meta property="og:locale" content="%s">'
-              '<meta property="og:url" content="%s%s">') % (title, desc, og, SITE, here)
+              '<meta property="og:url" content="%s%s"><meta property="og:image" content="%s/img/og.jpg">'
+              '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
+              '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="%s/img/og.jpg">') % (title, desc, og, SITE, here, SITE, SITE)
     out = out.replace("</title>", "</title>" + links, 1)
     path = os.path.join(ROOT, d, "index.html")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -220,3 +222,15 @@ def build(idx):
 
 for i in range(len(LANGS)):
     build(i)
+
+
+# sitemap.xml + robots.txt
+urls = "".join(
+    "<url><loc>%s/%s</loc>%s</url>" % (SITE, l[1], "".join(
+        '<xhtml:link rel="alternate" hreflang="%s" href="%s/%s"/>' % (m[2], SITE, m[1]) for m in LANGS))
+    for l in LANGS)
+open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8").write(
+    '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+    'xmlns:xhtml="http://www.w3.org/1999/xhtml">' + urls + "</urlset>")
+open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8").write(
+    "User-agent: *\nAllow: /\n\nSitemap: %s/sitemap.xml\n" % SITE)
