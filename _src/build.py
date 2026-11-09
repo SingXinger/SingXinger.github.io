@@ -51,7 +51,7 @@ T = [
   "用呼吸聚氣,<br>找回再次前行的力量。武俠療癒遊戲。"),
  ('운기조식 만나기 <span>↗</span>', 'Play Ungijosik <span>↗</span>', '運気調息を遊ぶ <span>↗</span>', '開始《運氣調息》 <span>↗</span>'),
  ("▷ 홍보영상 보기", "▷ Watch the trailer", "▷ 紹介映像を見る", "▷ 觀看宣傳影片"),
- ('Google Play <span class="divider">/</span> 토스 출시', "Available on Google Play", "Google Play で配信中", "已於 Google Play 上架"),
+ ('Google Play <span class="divider">/</span> 토스 미니앱 오픈', "Available on Google Play", "Google Play で配信中", "已於 Google Play 上架"),
  ('alt="운기조식 포스터. 숲속 정자에서 푸른 도복의 무림인이 운기조식하는 모습"',
   'alt="Ungijosik poster: a martial artist in a blue robe practising breathwork in a forest pavilion"',
   'alt="運気調息のポスター。森の東屋で青い道着の武林人が運気調息をする姿"',
@@ -117,9 +117,7 @@ T = [
  ("크게 보기", "enlarge", "拡大表示", "放大檢視"),
  ("오늘의 수련은,<br><em>편안한 한 호흡부터.</em>", "Today's training starts<br><em>with one easy breath.</em>", "今日の修練は、<br><em>楽なひと息から。</em>", "今天的修練,<br><em>從輕鬆的一口氣開始。</em>"),
  ("운기조식을 만나는 방법을 안내합니다.", "Here's how to play Ungijosik.", "運気調息の遊び方をご案内します。", "說明如何下載《運氣調息》。"),
- ("<p>Android에서 만나요</p>", "<p>Play on Android</p>", "<p>Android で遊ぶ</p>", "<p>在 Android 上遊玩</p>"),
- ("지금 받기 ↗", "Get it now ↗", "今すぐ入手 ↗", "立即下載 ↗"),
- ("Google Play와 토스에서 지금 만날 수 있어요.<br>토스 버튼은 휴대폰의 토스 앱이 설치된 기기에서 열립니다.",
+   ("Google Play와 토스 미니앱으로 만나보세요.<br>토스 미니앱은 휴대폰에 토스 앱이 설치된 기기에서 열립니다.",
   "Available now on Google Play.",
   "Google Play で配信中です。",
   "現已於 Google Play 上架。"),
@@ -135,7 +133,7 @@ T = [
   "呼吸の円が大きくなるときに押し、小さくなるときに離して、吸う息と吐く息をつなげます。武功は技の拍に合わせて修練し、対戦は自動で進みます。",
   "呼吸圓圈變大時按住、變小時放開,接續每一次吸氣與吐氣。武功配合招式的節奏修練,對戰則自動進行。"),
  ("지금 다운로드할 수 있나요?", "Can I download it now?", "今すぐダウンロードできますか?", "現在可以下載嗎?"),
- ('네. Android에서는 <a class="text-link" href="https://play.google.com/store/apps/details?id=com.ungijosik.game" target="_blank" rel="noopener noreferrer">Google Play</a>에서 받을 수 있고, 토스 앱에서는 <a class="text-link" href="intoss://ungijosik">토스에서 열기</a>로 바로 만날 수 있습니다.',
+ ('네. Android에서는 <a class="text-link" href="https://play.google.com/store/apps/details?id=com.ungijosik.game" target="_blank" rel="noopener noreferrer">Google Play</a>에서 받을 수 있고, 토스 앱에서는 <a class="text-link" href="intoss://ungijosik">토스 미니앱으로 열기</a>로 바로 만날 수 있습니다.',
   'Yes. On Android, get it on <a class="text-link" href="https://play.google.com/store/apps/details?id=com.ungijosik.game" target="_blank" rel="noopener noreferrer">Google Play</a>.',
   'はい。Android では <a class="text-link" href="https://play.google.com/store/apps/details?id=com.ungijosik.game" target="_blank" rel="noopener noreferrer">Google Play</a> から入手できます。',
   '可以。Android 裝置可從 <a class="text-link" href="https://play.google.com/store/apps/details?id=com.ungijosik.game" target="_blank" rel="noopener noreferrer">Google Play</a> 下載。'),
@@ -183,9 +181,13 @@ def build(idx):
         out = out.replace('>운기조식<span', '>' + BRAND[code] + '<span')
         # language-specific copies of the game/poster images (text baked in)
         out = re.sub(r'/img/([0-9a-f]{8})\.webp', lambda m: '/img/%s/%s.webp' % (IMGDIR[code], m.group(1)), out)
+        gp = {"en": ("en.svg", "Get it on Google Play"), "ja": ("ja.png", "Google Play で手に入れよう"),
+              "zh": ("zh-tw.svg", "在 Google Play 上取得"), "zs": ("zh-cn.svg", "在 Google Play 上获取")}[code]
+        out = out.replace('/img/gplay/ko.svg', '/img/gplay/' + gp[0], 1).replace('alt="Google Play에서 다운로드"', 'alt="%s"' % gp[1], 1)
         # drop the Toss card (Korean-only)
-        out, n = re.subn(r'<a class="play-link" href="intoss://ungijosik">.*?</a>(?=</div>)', "", out, flags=re.S)
+        out, n = re.subn(r'<a class="toss-badge" href="intoss://ungijosik">.*?</a>(?=</div>)', "", out, flags=re.S)
         assert n == 1, "toss card not found"
+        out = out.replace('.toss-badge{display:block;width:200px;max-width:100%;margin:0 auto;align-self:center}.toss-badge img{display:block;width:100%;height:auto}', '', 1)
         out = out.replace('<div class="platforms">', '<div class="platforms one">', 1)
         out = out.replace(".platforms .play-link{", ".platforms.one{grid-template-columns:minmax(0,420px);justify-content:center}.platforms .play-link{", 1)
         # fonts
